@@ -287,58 +287,40 @@ var measureString = function(str, $parent) {
  * @param {object} $input
  */
 var autoGrow = function($input) {
-	var currentWidth = null;
+	// Init mirror
+  var mirror = $('<span style="position:absolute; top:-999px; left:0; white-space:pre;"/>');
+
+  // Copy to mirror
+  $.each(['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'letterSpacing', 'textTransform', 'wordSpacing', 'textIndent'], function (i, val) {
+  	mirror[0].style[val] = $input.css(val);
+  });
+  $("body").append(mirror);
 
 	var update = function(e, options) {
-		var value, keyCode, printable, placeholder, width;
-		var shift, character, selection;
-		e = e || window.event || {};
-		options = options || {};
+		var value = $input.val() || $input.attr('placeholder') || "";
+    if (value === mirror.text()) {
+        // Nothing have changed - skip
+        return;
+    }
 
-		if (e.metaKey || e.altKey) return;
-		if (!options.force && $input.data('grow') === false) return;
+    // Update mirror
+    mirror.text(value);
 
-		value = $input.val();
-		if (e.type && e.type.toLowerCase() === 'keydown') {
-			keyCode = e.keyCode;
-			printable = (
-				(keyCode >= 97 && keyCode <= 122) || // a-z
-				(keyCode >= 65 && keyCode <= 90)  || // A-Z
-				(keyCode >= 48 && keyCode <= 57)  || // 0-9
-				keyCode === 32 // space
-			);
-
-			if (keyCode === KEY_DELETE || keyCode === KEY_BACKSPACE) {
-				selection = getSelection($input[0]);
-				if (selection.length) {
-					value = value.substring(0, selection.start) + value.substring(selection.start + selection.length);
-				} else if (keyCode === KEY_BACKSPACE && selection.start) {
-					value = value.substring(0, selection.start - 1) + value.substring(selection.start + 1);
-				} else if (keyCode === KEY_DELETE && typeof selection.start !== 'undefined') {
-					value = value.substring(0, selection.start) + value.substring(selection.start + 1);
-				}
-			} else if (printable) {
-				shift = e.shiftKey;
-				character = String.fromCharCode(e.keyCode);
-				if (shift) character = character.toUpperCase();
-				else character = character.toLowerCase();
-				value += character;
-			}
-		}
-
-		placeholder = $input.attr('placeholder');
-		if (!value && placeholder) {
-			value = placeholder;
-		}
-
-		width = measureString(value, $input) + 4;
-		if (width !== currentWidth) {
-			currentWidth = width;
-			$input.width(width);
-			$input.triggerHandler('resize');
-		}
+    // Calculate the width
+    var newWidth = mirror.width() + 10;
+    $input.width(newWidth);
+    $input.triggerHandler('resize');
 	};
 
-	$input.on('keydown keyup update blur', update);
+  // Bind events - change update paste click mousedown mouseup focus blur
+  // IE 9 need keydown to keep updating while deleting (keeping backspace in - else it will first update when backspace is released)
+  // IE 9 need keyup incase text is selected and backspace/deleted is hit - keydown is to early
+  // How to fix problem with hitting the delete "X" in the box - but not updating!? mouseup is apparently to early
+  // Could bind separatly and set timer
+  // Add so it automatically updates if value of input is changed http://stackoverflow.com/a/1848414/58524
+  $input.on("keydown keyup update blur input propertychange change", update);
+
 	update();
+
+	return mirror;
 };
