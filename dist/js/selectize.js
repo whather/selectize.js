@@ -1779,7 +1779,7 @@
 					if (!self.isPending) {
 						$option = self.getOption(value);
 						value_next = self.getAdjacentOption($option, 1).attr('data-value');
-						self.refreshOptions(self.settings.openAfterAdd && self.isFocused && inputMode !== 'single');
+						self.refreshOptions(self.isFocused && inputMode !== 'single');
 						if (value_next) {
 							self.setActiveOption(self.getOption(value_next));
 						}
@@ -1795,6 +1795,10 @@
 					self.updatePlaceholder();
 					self.trigger('item_add', value, $item);
 					self.updateOriginalInput();
+	
+					if (self.settings.closeAfterAdd) {
+						self.close();
+					}
 				}
 			});
 		},
@@ -1877,7 +1881,11 @@
 				self.addOption(data);
 				self.setCaret(caret);
 				self.addItem(value);
-				self.refreshOptions(triggerDropdown && self.settings.openAfterAdd && self.settings.mode !== 'single');
+				self.refreshOptions(triggerDropdown && self.settings.mode !== 'single');
+	
+				if (self.settings.closeAfterAdd) {
+					self.close();
+				}
 			});
 	
 			var output = setup.apply(this, [input, create]);
@@ -2138,7 +2146,7 @@
 	
 			self.showInput();
 			self.positionDropdown();
-			self.refreshOptions(self.settings.openAfterRemove);
+			self.refreshOptions(true);
 	
 			// select previous option
 			if (option_select) {
@@ -2146,6 +2154,10 @@
 				if ($option_select.length) {
 					self.setActiveOption($option_select);
 				}
+			}
+	
+			if (self.settings.closeAfterRemove) {
+				self.close();
 			}
 	
 			return true;
@@ -2421,8 +2433,8 @@
 		createFilter: null,
 		highlight: true,
 		openOnFocus: true,
-		openAfterAdd: true,
-		openAfterRemove: true,
+		closeAfterAdd: false,
+		closeAfterRemove: false,
 		maxOptions: 1000,
 		maxItems: null,
 		hideSelected: null,
