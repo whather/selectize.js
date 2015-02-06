@@ -955,6 +955,17 @@ $.extend(Selectize.prototype, {
 			}
 		}
 
+		// add empty option to beginning of array, like normal select control
+		if (settings.allowEmptyOption) {
+			for (i = result.items.length - 1; i >= 0; i--) {
+				if (result.items[i].id === "") {
+					var emptyItem = result.items.splice(i, 1);
+					result.items.unshift(emptyItem[0]);
+					break;
+				}
+			}
+		}
+		
 		return result;
 	},
 
