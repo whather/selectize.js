@@ -474,6 +474,7 @@
 			optgroups        : {},
 			options          : {},
 			userOptions      : {},
+			createdOptions	 : {},
 			items            : [],
 			renderCache      : {},
 			onSearchChange   : settings.loadThrottle === null ? self.onSearchChange : debounce(self.onSearchChange, settings.loadThrottle)
@@ -1576,6 +1577,7 @@
 					$active = $create;
 				}
 				self.setActiveOption($active);
+				self.positionDropdown();
 				if (triggerDropdown && !self.isOpen) { self.open(); }
 			} else {
 				self.setActiveOption(null);
@@ -1771,6 +1773,7 @@
 	
 			self.loadedSearches = {};
 			self.userOptions = {};
+			self.createdOptions = {};
 			self.renderCache = {};
 			self.options = self.sifter.items = {};
 			self.lastQuery = null;
@@ -1940,7 +1943,7 @@
 	
 				self.items.splice(i, 1);
 				self.lastQuery = null;
-				if (!self.settings.persist && self.userOptions.hasOwnProperty(value)) {
+				if (!self.settings.persist && self.createdOptions.hasOwnProperty(value)) {
 					self.removeOption(value, silent);
 				}
 	
@@ -2004,6 +2007,7 @@
 	
 				self.setTextboxValue('');
 				self.addOption(data);
+				self.createdOptions[value] = true;
 				self.setCaret(caret);
 				self.addItem(value);
 				self.refreshOptions(triggerDropdown && self.settings.mode !== 'single');
@@ -2168,19 +2172,102 @@
 		},
 	
 		/**
-		 * Calculates and applies the appropriate
-		 * position of the dropdown.
+		 * Calculates and applies the appropriate position of the dropdown.
+		 *
+		 * Supports dropdownDirection up, down and auto. In case menu can't be fitted it's
+		 * height is limited to don't fall out of display.
 		 */
 		positionDropdown: function() {
 			var $control = this.$control;
-			var offset = this.settings.dropdownParent === 'body' ? $control.offset() : $control.position();
-			offset.top += $control.outerHeight(true);
+			var $dropdown = this.$dropdown;
+			var p = this.getPositions();
+	
+			// direction
+			var direction = this.getDropdownDirection(p);
+			if (direction === 'up') {
+				$dropdown.addClass('direction-up');
+				$dropdown.removeClass('direction-down');
+			} else {
+				$dropdown.removeClass('direction-up');
+				$dropdown.addClass('direction-down');
+			}
+			$control.attr('data-dropdown-direction', direction);
+	
+			// position
+			var isParentBody = this.settings.dropdownParent === 'body';
+			var offset = isParentBody ? $control.offset() : $control.position();
+			var fittedHeight;
+	
+			switch (direction) {
+				case 'up':
+					offset.top -= p.dropdown.height;
+					if (p.dropdown.height > p.control.above) {
+						fittedHeight = p.control.above - 5;
+					}
+					break;
+	
+				case 'down':
+					offset.top += p.control.height;
+					if (p.dropdown.height > p.control.below) {
+						fittedHeight = p.control.below - 5;
+					}
+					break;
+			}
+	
+			if (fittedHeight) {
+				this.$dropdown_content.css({ 'max-height' : fittedHeight });
+			}
 	
 			this.$dropdown.css({
 				width : $control.outerWidth(),
 				top   : offset.top,
 				left  : offset.left
 			});
+		},
+	
+		/**
+		 * Gets direction to display dropdown in. Either up or down.
+		 */
+		getDropdownDirection : function(positions) {
+			var direction = this.settings.dropdownDirection;
+	
+			if (direction === 'auto') {
+				// down if dropdown fits
+				if (positions.control.below > positions.dropdown.height) {
+					direction = 'down';
+				}
+				// otherwise direction with most space
+				else {
+					direction = (positions.control.above > positions.control.below) ? 'up' : 'down';
+				}
+			}
+	
+			return direction;
+		},
+	
+		/**
+		 * Get position information for the control and dropdown element.
+		 */
+		getPositions: function() {
+			var $control = this.$control;
+			var $window = $(window);
+	
+			var control_height = $control.outerHeight(false);
+			var control_above = $control.offset().top - $window.scrollTop();
+			var control_below = $window.height() - control_above - control_height;
+	
+			var dropdown_height = this.$dropdown.outerHeight(false);
+	
+			return {
+				control : {
+					height : control_height,
+					above : control_above,
+					below : control_below
+				},
+				dropdown : {
+					height : dropdown_height
+				}
+			};
 		},
 	
 		/**
@@ -2603,6 +2690,7 @@
 		dropdownContentClass: 'selectize-dropdown-content',
 	
 		dropdownParent: null,
+		dropdownDirection: 'auto',
 	
 		copyClassesToDropdown: true,
 	
