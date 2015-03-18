@@ -1331,6 +1331,7 @@ $.extend(Selectize.prototype, {
 		if (cache_options) delete cache_options[value];
 
 		delete self.userOptions[value];
+		delete self.createdOptions[value];
 		delete self.options[value];
 		self.lastQuery = null;
 		self.trigger('option_remove', value);
@@ -1484,10 +1485,6 @@ $.extend(Selectize.prototype, {
 				self.updatePlaceholder();
 				self.trigger('item_add', value, $item);
 				self.updateOriginalInput({silent: silent});
-
-				if (self.settings.closeAfterAdd) {
-					self.close();
-				}
 			}
 		});
 	},
@@ -1584,10 +1581,6 @@ $.extend(Selectize.prototype, {
 			self.addItem(value);
 			self.refreshOptions(triggerDropdown && self.settings.mode !== 'single');
 			callback(data);
-
-			if (self.settings.closeAfterAdd) {
-				self.close();
-			}
 		});
 
 		var output = setup.apply(this, [input, create]);
@@ -1935,7 +1928,7 @@ $.extend(Selectize.prototype, {
 
 		self.showInput();
 		self.positionDropdown();
-		self.refreshOptions(true);
+		self.refreshOptions(!self.settings.closeAfterRemove);
 
 		// select previous option
 		if (option_select) {
@@ -1943,10 +1936,6 @@ $.extend(Selectize.prototype, {
 			if ($option_select.length) {
 				self.setActiveOption($option_select);
 			}
-		}
-
-		if (self.settings.closeAfterRemove) {
-			self.close();
 		}
 
 		return true;

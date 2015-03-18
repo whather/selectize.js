@@ -13,7 +13,6 @@ Selectize.defaults = {
 	createFilter: null,
 	highlight: true,
 	openOnFocus: true,
-	closeAfterAdd: false,
 	closeAfterRemove: false,
 	maxOptions: 1000,
 	maxItems: null,
