@@ -46,6 +46,7 @@ var Selectize = function($input, settings) {
 		optgroups        : {},
 		options          : {},
 		userOptions      : {},
+		createdOptions	 : {},
 		items            : [],
 		renderCache      : {},
 		onSearchChange   : settings.loadThrottle === null ? self.onSearchChange : debounce(self.onSearchChange, settings.loadThrottle)
@@ -1344,6 +1345,7 @@ $.extend(Selectize.prototype, {
 
 		self.loadedSearches = {};
 		self.userOptions = {};
+		self.createdOptions = {};
 		self.renderCache = {};
 		self.options = self.sifter.items = {};
 		self.lastQuery = null;
@@ -1513,7 +1515,7 @@ $.extend(Selectize.prototype, {
 
 			self.items.splice(i, 1);
 			self.lastQuery = null;
-			if (!self.settings.persist && self.userOptions.hasOwnProperty(value)) {
+			if (!self.settings.persist && self.createdOptions.hasOwnProperty(value)) {
 				self.removeOption(value, silent);
 			}
 
@@ -1577,6 +1579,7 @@ $.extend(Selectize.prototype, {
 
 			self.setTextboxValue('');
 			self.addOption(data);
+			self.createdOptions[value] = true;
 			self.setCaret(caret);
 			self.addItem(value);
 			self.refreshOptions(triggerDropdown && self.settings.mode !== 'single');
