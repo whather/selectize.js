@@ -1903,10 +1903,6 @@ $.extend(Selectize.prototype, {
 			for (i = 0, n = self.$activeItems.length; i < n; i++) {
 				values.push($(self.$activeItems[i]).attr('data-value'));
 			}
-			if (e) {
-				e.preventDefault();
-				e.stopPropagation();
-			}
 		} else if ((self.isFocused || self.settings.mode === 'single') && self.items.length) {
 			if (direction < 0 && selection.start === 0 && selection.length === 0) {
 				values.push(self.items[self.caretPos - 1]);
@@ -1915,6 +1911,11 @@ $.extend(Selectize.prototype, {
 			}
 		}
 
+		if (values.length > 0 && e) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
+		
 		// allow the callback to abort
 		if (!values.length || (typeof self.settings.onDelete === 'function' && self.settings.onDelete.apply(self, [values]) === false)) {
 			return false;
